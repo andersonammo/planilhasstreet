@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Street - Óticas Ammo</title>
+    <style>
+        :root {
+            --primary: #FFD700; /* Amarelo Ouro */
+            --bg-app: #000000;  /* Preto Fundo */
+            --card-bg: #1C1C1C; /* Cinza Escuro Cards */
+            --text-main: #FFFFFF;
+            --text-muted: #BBBBBB;
+            --border: #333333;
+            --input-bg: #2A2A2A;
+            --success-green: #25D366;
+            --special-blue: #00BFFF;
+            --danger: #FF4444; /* Vermelho para botão de apagar */
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-app);
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* Abas de Navegação */
+        .tabs {
+            display: flex;
+            background: var(--card-bg);
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        /* Cartões */
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            display: none; /* Escondido por padrão */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .card.active { display: block; animation: fadeIn 0.4s ease; }
+
+        h2 { margin-top: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 1.2rem; }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+
+        button.action-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            margin-top: 25px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #CBA300;
+            transition: 0.2s;
+        }
+
+        button.action-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #CBA300; }
+
+        /* Botão Perigo (Zerar) */
+        button.danger-btn {
+            background-color: var(--danger);
+            color: white;
+            box-shadow: 0 4px 0 #cc0000;
+            margin-top: 40px;
+        }
+        button.danger-btn:active { box-shadow: 0 2px 0 #cc0000; }
+
+        /* Área do Brinde (Resultado) */
+        .gift-box {
+            text-align: center;
+            background: #000;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed var(--primary);
+            margin-top: 10px;
+        }
+
+        .gift-tag {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .tag-gold { background: var(--primary); color: #000; }
+        .tag-blue { background: var(--special-blue); color: #fff; }
+        .tag-green { background: var(--success-green); color: #fff; }
+
+        .id-display {
+            font-family: 'Courier New', monospace;
+            font-size: 26px;
+            color: var(--primary);
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        /* Barras de Progresso */
+        .goal-item { margin-bottom: 15px; }
+        .goal-labels { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; color: #ccc; }
+        .progress-track { background: #333; height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; width: 0%; transition: 1s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('leads')">📝 CADASTRO</button>
+        <button class="tab-btn" onclick="switchTab('report')">📊 METAS</button>
+        <button class="tab-btn" onclick="switchTab('config')">⚙️ CONFIG</button>
+    </div>
+
+    <div id="leads" class="card active">
+        <h2>🚀 Street Óticas Ammo</h2>
+        
+        <form id="leadForm" onsubmit="salvarLead(event)">
+            <label>NOME COMPLETO:</label>
+            <input type="text" id="clienteNome" required placeholder="Nome do cliente">
+
+            <label>WHATSAPP (DDD+NÚMERO):</label>
+            <input type="tel" id="clienteTel" required placeholder="Ex: 41999999999" oninput="this.value = this.value.replace(/\D/g, '')">
+
+            <label>CIDADE:</label>
+            <input type="text" id="clienteCidade" required placeholder="Cidade">
+
+            <label>O QUE PRECISA?</label>
+            <textarea id="clientePrecisa" rows="2" required placeholder="Ex: Óculos Solar, Grau, Exame..."></textarea>
+
+            <button type="submit" class="action-btn" id="btnSalvar">💾 SALVAR LEAD</button>
+        </form>
+
+        <div id="successArea" style="display:none;">
+            <div class="gift-box">
+                <div id="tagBrinde" class="gift-tag tag-green">DESCONTO ATIVO</div>
+                
+                <h3 style="margin:5px 0; color:#fff">CADASTRO CONCLUÍDO!</h3>
+                <div class="id-display" id="generatedID">---</div>
+                
+                <p id="descBrinde" style="color: #fff; font-size: 1.1rem; line-height: 1.4;">
+                    GANHOU 30% DE DESCONTO
+                </p>
+                
+                <button class="action-btn" onclick="enviarMsgCliente()">
+                    🚀 ENVIAR NO WHATSAPP
+                </button>
+                <button class="action-btn" style="background:#333; color:#fff; box-shadow:none; margin-top:10px;" onclick="resetForm()">
+                    🔄 PRÓXIMO CLIENTE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="report" class="card">
+        <h2>📊 Acompanhamento</h2>
+        
+        <div class="goal-item">
+            <div class="goal-labels"><span>Meta Kit Limpa Lentes (20)</span><span id="txtMeta20">0/20</span></div>
+            <div class="progress-track"><div id="bar20" class="progress-fill" style="background: var(--special-blue);"></div></div>
+        </div>
+
+        <div class="goal-item">
+            <div class="goal-labels"><span>Meta Óculos Solar (50)</span><span id="txtMeta50">0/50</span></div>
+            <div class="progress-track"><div id="bar50" class="progress-fill" style="background: var(--primary);"></div></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:25px; text-align:center;">
+            <div style="width:48%; background:#222; padding:10px; border-radius:8px;">
+                <div id="leadsSessao" style="font-size:24px; font-weight:bold; color:var(--primary)">0</div>
+                <small style="color:#888">HOJE</small>
+            </div>
+            <div style="width:48%; background:#222; padding:10px; border-radius:8px;">
+                <div id="totalGeral" style="font-size:24px; font-weight:bold; color:#fff">0</div>
+                <small style="color:#888">TOTAL GERAL</small>
+            </div>
+        </div>
+        
+        <button class="action-btn" onclick="enviarRelatorioGerencia()">📤 RELATÓRIO GERÊNCIA</button>
+    </div>
+
+    <div id="config" class="card">
+        <h2>⚙️ Configuração</h2>
+        <label>NOME DO CONSULTOR:</label>
+        <input type="text" id="consultorNome" placeholder="Seu nome">
+        <button class="action-btn" onclick="salvarConfig()">✅ SALVAR DADOS</button>
+
+        <hr style="border-color:#333; margin-top:30px;">
+        <label style="color:#ff6666">ZONA DE PERIGO</label>
+        <p style="font-size:0.8rem; color:#888;">Use apenas se precisar reiniciar a contagem dos brindes do zero.</p>
+        <button class="action-btn danger-btn" onclick="zerarMetas()">🗑️ ZERAR CONTADORES</button>
+    </div>
+
+</div>
+
+<script>
+    // ============================================================
+    // COLE SUA URL DO GOOGLE APPS SCRIPT AQUI DENTRO DAS ASPAS:
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycby3GmHUsF5sCawrA1bYbrUbqJQwvWpIU6GI77IDT0iiIP7fg6iMh9ogvrWSWyxD6NZv/exec"; 
+    // ============================================================
+
+    let leadsSessao = [];
+    let totalAcumulado = parseInt(localStorage.getItem('total_leads_ammo')) || 0;
+
+    window.onload = function() {
+        carregarConfig();
+        atualizarInterface();
+    };
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
+    }
+
+    function salvarConfig() {
+        const nome = document.getElementById('consultorNome').value;
+        if(!nome) return alert("Digite seu nome!");
+        localStorage.setItem('consultor_nome', nome);
+        alert("Salvo com sucesso!");
+        switchTab('leads');
+    }
+
+    function carregarConfig() {
+        const nome = localStorage.getItem('consultor_nome');
+        if(nome) document.getElementById('consultorNome').value = nome;
+    }
+
+    // --- NOVA FUNÇÃO PARA LIMPAR ARMAZENAMENTO ---
+    function zerarMetas() {
+        if(confirm("ATENÇÃO: Isso vai zerar seu 'Total Geral' e reiniciar a contagem para os brindes de 20 e 50 leads.\n\nDeseja continuar?")) {
+            localStorage.removeItem('total_leads_ammo');
+            totalAcumulado = 0;
+            atualizarInterface();
+            alert("Contadores zerados com sucesso! Boa sorte na nova meta.");
+            switchTab('report');
+        }
+    }
+
+    function salvarLead(e) {
+        e.preventDefault();
+        const consultor = localStorage.getItem('consultor_nome');
+        if(!consultor) {
+            alert("Vá em CONFIG e coloque seu nome antes de começar.");
+            return switchTab('config');
+        }
+
+        const btn = document.getElementById('btnSalvar');
+        btn.innerText = "⏳ ENVIANDO...";
+        btn.disabled = true;
+
+        // Atualiza contadores
+        totalAcumulado++;
+        localStorage.setItem('total_leads_ammo', totalAcumulado);
+
+        // Gera ID e define prêmios
+        const id = "AMMO" + Math.floor(1000 + Math.random() * 9000);
+        
+        let brindeAtual = "30% OFF";
+        let ganhouKit = false;
+        let ganhouOculos = false;
+
+        // Regra de Negócio: Prioridade para o Óculos (50), depois Kit (20)
+        if (totalAcumulado % 50 === 0) {
+            ganhouOculos = true;
+            brindeAtual = "ÓCULOS SOLAR + 30% OFF";
+        } else if (totalAcumulado % 20 === 0) {
+            ganhouKit = true;
+            brindeAtual = "KIT LIMPA LENTES + 30% OFF";
+        }
+
+        const dados = {
+            id: id,
+            nome: document.getElementById('clienteNome').value,
+            tel: document.getElementById('clienteTel').value,
+            cidade: document.getElementById('clienteCidade').value,
+            precisa: document.getElementById('clientePrecisa').value,
+            consultor: consultor,
+            brinde: brindeAtual
+        };
+
+        fetch(GOOGLE_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(dados),
+            headers: {'Content-Type': 'application/json'}
+        }).then(() => {
+            leadsSessao.push(dados);
+            atualizarInterface();
+            mostrarSucesso(dados, ganhouKit, ganhouOculos);
+        }).catch(err => {
+            alert("Erro de conexão. Verifique sua internet.");
+            btn.disabled = false;
+            btn.innerText = "💾 SALVAR LEAD";
+        });
+    }
+
+    function mostrarSucesso(dados, kit, oculos) {
+        document.getElementById('leadForm').style.display = 'none';
+        document.getElementById('successArea').style.display = 'block';
+        document.getElementById('generatedID').innerText = dados.id;
+
+        const tag = document.getElementById('tagBrinde');
+        const desc = document.getElementById('descBrinde');
+
+        if(oculos) {
+            tag.className = 'gift-tag tag-gold';
+            tag.innerText = "🏆 SUPER PRÊMIO";
+            desc.innerHTML = "PARABÉNS! VOCÊ GANHOU:<br><b style='color:var(--primary)'>1 ÓCULOS SOLAR AMMO</b><br>+ 30% DE DESCONTO";
+        } else if(kit) {
+            tag.className = 'gift-tag tag-blue';
+            tag.innerText = "🎁 PRÊMIO ESPECIAL";
+            desc.innerHTML = "PARABÉNS! VOCÊ GANHOU:<br><b style='color:var(--special-blue)'>1 KIT LIMPA LENTES</b><br>+ 30% DE DESCONTO";
+        } else {
+            tag.className = 'gift-tag tag-green';
+            tag.innerText = "✅ CUPOM ATIVO";
+            desc.innerHTML = "VOCÊ GANHOU:<br><b>30% DE DESCONTO</b><br>EM TODA A LOJA";
+        }
+
+        window.currentData = dados;
+    }
+
+    function resetForm() {
+        document.getElementById('leadForm').reset();
+        document.getElementById('leadForm').style.display = 'block';
+        document.getElementById('successArea').style.display = 'none';
+        document.getElementById('btnSalvar').innerText = "💾 SALVAR LEAD";
+        document.getElementById('btnSalvar').disabled = false;
+    }
+
+    function atualizarInterface() {
+        document.getElementById('leadsSessao').innerText = leadsSessao.length;
+        document.getElementById('totalGeral').innerText = totalAcumulado;
+
+        // Barras
+        const p20 = totalAcumulado % 20;
+        const p50 = totalAcumulado % 50;
+        
+        const width20 = (totalAcumulado > 0 && p20 === 0) ? 100 : (p20/20)*100;
+        const width50 = (totalAcumulado > 0 && p50 === 0) ? 100 : (p50/50)*100;
+
+        document.getElementById('bar20').style.width = width20 + "%";
+        document.getElementById('txtMeta20').innerText = `${p20}/20`;
+        
+        document.getElementById('bar50').style.width = width50 + "%";
+        document.getElementById('txtMeta50').innerText = `${p50}/50`;
+    }
+
+    function enviarMsgCliente() {
+        const d = window.currentData;
+        let extraText = "";
+        
+        if(d.brinde.includes("ÓCULOS")) {
+            extraText = "\n\n😎 *PARABÉNS!* Você foi selecionado e ganhou também um *ÓCULOS SOLAR AMMO* totalmente grátis!";
+        } else if(d.brinde.includes("KIT")) {
+            extraText = "\n\n✨ *PARABÉNS!* Você ganhou um *KIT LIMPA LENTES* de brinde!";
+        }
+
+        const msg = `Olá ${d.nome}! 👋\n\n*VOCE ACABA DE GANHAR 30% DE DESCONTO EM QUALQUER ITEM NAS OTICAS AMMO*!${extraText}\n\n🔑 Seu código de ativação: *${d.id}*\n\nResponda *EU QUERO* para ativar seu prêmio agora!`;
+        
+        window.open(`https://wa.me/55${d.tel}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function enviarRelatorioGerencia() {
+        const c = localStorage.getItem('consultor_nome');
+        let txt = `📊 *RELATÓRIO AMMO*\n👤 Consultor: ${c}\n🏆 Total Histórico: ${totalAcumulado}\n✅ Leads Hoje: ${leadsSessao.length}\n\n`;
+        leadsSessao.forEach((l, i) => {
+            txt += `${i+1}. ${l.nome} (${l.precisa}) - ${l.brinde}\n`;
+        });
+        window.open(`https://wa.me/5541996509734?text=${encodeURIComponent(txt)}`, '_blank');
+    }
+</script>
+
+</body>
+</html>
